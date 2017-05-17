@@ -77,7 +77,7 @@ class SelectorBIC(ModelSelector):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         # TODO implement model selection based on BIC scores
-        score = float('inf')
+        bestScore = float('inf')
         bestModel = None
         for n in range(self.min_n_components, self.max_n_components + 1):
             try:
@@ -92,7 +92,7 @@ class SelectorBIC(ModelSelector):
                 N = len(self.X)
                 scoreNew = -2*logL + p * math.log(N)
                 
-                if scoreNew < score:
+                if scoreNew < bestScore:
                     score = scoreNew
                     bestModel = model
             except:
@@ -114,8 +114,7 @@ class SelectorDIC(ModelSelector):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         # TODO implement model selection based on DIC scores
-        #raise NotImplementedError
-        return None
+        raise NotImplementedError
 
 
 class SelectorCV(ModelSelector):
@@ -127,15 +126,25 @@ class SelectorCV(ModelSelector):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         # TODO implement model selection using CV
-        score = float('inf')
+        best_score = float('inf')
+        best_model = None
+        
         for n in range(self.min_n_components, self.max_n_components + 1):
             try:
-                model = self.base_model(n)
-                logL = model.score(self.X, self.lengths)
+                kf = KFold(n_splits=3, shuffle = True, random_state = 517)
+                score_list = []
+                for train_idx, test_idx in kf.split(self.sequences)
+                    X_train, lengths_train = combine_sequences(train_idx, self.sequences)
+                    X_test, lengths_test = combine_sequences(test_idx, self.sequences)
+                    model = GaussianHMM(n_components=n, covariance_type="diag", n_iter=1000,
+                                        random_state=self.random_state, verbose=False).fit(X_train, lengths_train)
+                    score_list.append(model.score(X_test, lengths_test))
+                scoreNew = statistics.mean(score_list)
                 
                 if scoreNew < score:
-                    score = scoreNew
+                    bestScore = scoreNew
                     bestModel = model
+                    
             except:
                 pass
             

@@ -126,7 +126,7 @@ class SelectorCV(ModelSelector):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         # TODO implement model selection using CV
-        best_score = float('inf')
+        best_score = float('-inf')
         best_model = None
         
         for n in range(self.min_n_components, self.max_n_components + 1):
@@ -141,7 +141,7 @@ class SelectorCV(ModelSelector):
                     score_list.append(model.score(X_test, lengths_test))
                 scoreNew = statistics.mean(score_list)
                 
-                if scoreNew < score:
+                if scoreNew > score:
                     bestScore = scoreNew
                     bestModel = model
                     

@@ -114,7 +114,19 @@ class SelectorDIC(ModelSelector):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         # TODO implement model selection based on DIC scores
-        raise NotImplementedError
+        score_dict = {}
+        model_dict = {}
+        n_total = self.max_n_components + 1 - self.min_n_components
+        for n in range(self.min_n_components, self.max_n_components + 1):
+            try:
+                model_dict[n] = self.base_model(n)
+                score_dict[n] = model_dict[n].score(self.X, self.lengths)
+            except:
+                pass
+        score_average = statistics.mean(score_dict.values())
+        # DIC(i) = logL(i) - average(logL(j) for j != i), below expressed this strictly in terms of i
+        n_max = max(score_dict.keys(), key=lambda x: score_dict[x] - (n_total * score_average - score_dict[x]) / (n_total - 1))
+        return model_dict[n_max]
 
 
 class SelectorCV(ModelSelector):
@@ -126,14 +138,16 @@ class SelectorCV(ModelSelector):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         # TODO implement model selection using CV
-        best_score = float('-inf')
-        best_model = None
+        bestScore = float('-inf')
+        bestModel = None
+        
+        n_samples = len(self.lengths)
         
         for n in range(self.min_n_components, self.max_n_components + 1):
             try:
-                kf = KFold(n_splits=3, shuffle = True, random_state = 517)
+                kf = KFold(n_splits=min(3,n_samples), shuffle = True, random_state = 517)
                 score_list = []
-                for train_idx, test_idx in kf.split(self.sequences)
+                for train_idx, test_idx in kf.split(self.sequences):
                     X_train, lengths_train = combine_sequences(train_idx, self.sequences)
                     X_test, lengths_test = combine_sequences(test_idx, self.sequences)
                     model = GaussianHMM(n_components=n, covariance_type="diag", n_iter=1000,
@@ -141,11 +155,11 @@ class SelectorCV(ModelSelector):
                     score_list.append(model.score(X_test, lengths_test))
                 scoreNew = statistics.mean(score_list)
                 
-                if scoreNew > score:
+                if scoreNew > bestScore:
                     bestScore = scoreNew
                     bestModel = model
                     
             except:
                 pass
             
-        return model
+        return bestModel

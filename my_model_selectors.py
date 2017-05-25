@@ -114,19 +114,25 @@ class SelectorDIC(ModelSelector):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         # TODO implement model selection based on DIC scores
-        score_dict = {}
+        bestModel = None
+        logL_dict = {}
         model_dict = {}
         n_total = self.max_n_components + 1 - self.min_n_components
         for n in range(self.min_n_components, self.max_n_components + 1):
+        #    model_dict[n] = self.base_model(n)
+        #    logL_dict[n] = model_dict[n].score(self.X, self.lengths)
             try:
                 model_dict[n] = self.base_model(n)
-                score_dict[n] = model_dict[n].score(self.X, self.lengths)
+                logL_dict[n] = model_dict[n].score(self.X, self.lengths)
             except:
                 pass
-        score_average = statistics.mean(score_dict.values())
-        # DIC(i) = logL(i) - average(logL(j) for j != i), below expressed this strictly in terms of i
-        n_max = max(score_dict.keys(), key=lambda x: score_dict[x] - (n_total * score_average - score_dict[x]) / (n_total - 1))
-        return model_dict[n_max]
+        try:
+            score_average = statistics.mean(logL_dict.values())
+            # DIC(i) = logL(i) - average(logL(j) for j != i), below expressed this strictly in terms of i
+            n_max = max(logL_dict.keys(), key=lambda x: logL_dict[x] - (n_total * score_average - logL_dict[x]) / (n_total - 1))
+            return model_dict[n_max]
+        except statistics.StatisticsError:
+            return self.base_model(self.min_n_components)
 
 
 class SelectorCV(ModelSelector):

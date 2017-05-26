@@ -28,7 +28,7 @@ def recognize(models: dict, test_set: SinglesData):
             try:
                 p_dict[word] = model.score(X_test, lengths_test)
             except:
-                pass
+                p_dict[word] = 0.
         probabilities.append(p_dict)
         guesses.append(max(p_dict.keys(), key = lambda x: p_dict[x]))
     return probabilities, guesses

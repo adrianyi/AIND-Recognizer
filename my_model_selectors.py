@@ -78,6 +78,7 @@ class SelectorBIC(ModelSelector):
 
         # TODO implement model selection based on BIC scores
         bestScore = float('inf')
+        # If the attempt to score fails for all cases, return the simplest case of n = min_n_components
         bestModel = self.base_model(self.min_n_components)
         for n in range(self.min_n_components, self.max_n_components + 1):
             try:
@@ -131,6 +132,7 @@ class SelectorDIC(ModelSelector):
             # DIC(i) = logL(i) - average(logL(j) for j != i), below expressed this strictly in terms of i
             n_max = max(logL_dict.keys(), key=lambda x: logL_dict[x] - (n_total * score_average - logL_dict[x]) / (n_total - 1))
             return model_dict[n_max]
+        # If the attempt to score fails for all cases, return the simplest case of n = min_n_components
         except statistics.StatisticsError:
             return self.base_model(self.min_n_components)
 
@@ -145,6 +147,7 @@ class SelectorCV(ModelSelector):
 
         # TODO implement model selection using CV
         bestScore = float('-inf')
+        # If the attempt to score fails for all cases, return the simplest case of n = min_n_components
         bestModel = self.base_model(self.min_n_components)
         
         n_samples = len(self.lengths)

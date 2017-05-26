@@ -78,7 +78,7 @@ class SelectorBIC(ModelSelector):
 
         # TODO implement model selection based on BIC scores
         bestScore = float('inf')
-        bestModel = None
+        bestModel = self.base_model(self.min_n_components)
         for n in range(self.min_n_components, self.max_n_components + 1):
             try:
                 model = self.base_model(n)
@@ -145,7 +145,7 @@ class SelectorCV(ModelSelector):
 
         # TODO implement model selection using CV
         bestScore = float('-inf')
-        bestModel = None
+        bestModel = self.base_model(self.min_n_components)
         
         n_samples = len(self.lengths)
         

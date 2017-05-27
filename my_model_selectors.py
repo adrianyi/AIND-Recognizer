@@ -87,8 +87,8 @@ class SelectorBIC(ModelSelector):
                 
                 # number of features
                 n_f = np.array(self.X).shape[-1]
-                # number of parameters = diagonal transition matrix (n-1) + Gaussian parameters (2 * n_features * n)
-                p = (2 * n_f + 1) * n - 1
+                # number of parameters = transition matrix n*(n-1) + starting probabilities (n-1) + Gaussian parameters (2 * n_f * n)
+                p = n**2 - 2 * n_f * n - 1
                 # number of data points
                 N = len(self.X)
                 scoreNew = -2*logL + p * math.log(N)

@@ -115,27 +115,28 @@ class SelectorDIC(ModelSelector):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
         # TODO implement model selection based on DIC scores
-        bestModel = None
-        logL_dict = {}
-        model_dict = {}
+        # If the attempt to score fails for all cases, return the simplest case of n = min_n_components
+        bestModel = self.base_model(self.min_n_components)
+        bestScore = float('-inf')
         n_total = self.max_n_components + 1 - self.min_n_components
         for n in range(self.min_n_components, self.max_n_components + 1):
-        #    model_dict[n] = self.base_model(n)
-        #    logL_dict[n] = model_dict[n].score(self.X, self.lengths)
-            try:
-                model_dict[n] = self.base_model(n)
-                logL_dict[n] = model_dict[n].score(self.X, self.lengths)
-            except:
-                pass
-        try:
-            score_average = statistics.mean(logL_dict.values())
-            # DIC(i) = logL(i) - average(logL(j) for j != i), below expressed this strictly in terms of i
-            n_max = max(logL_dict.keys(), key=lambda x: logL_dict[x] - (n_total * score_average - logL_dict[x]) / (n_total - 1))
-            return model_dict[n_max]
-        # If the attempt to score fails for all cases, return the simplest case of n = min_n_components
-        except statistics.StatisticsError:
-            return self.base_model(self.min_n_components)
-
+            # DIC(word) = logL(word) - average(logL(another_word) for another_word != word) = logL(word) - sum(logL(another_word)) / (N-1)
+            # So loop through all the words, calculate logL(word) and sum(logL(!word)), then calculate DIC
+            logL_word = 0
+            sum_logL_notword = 0
+            for word in self.words.keys():
+                X_word, lengths_word in self.hwords:
+                model = self.base_model(n)
+                    try:
+                        if word == self.this_word:
+                            logL_word = model.score(X_word, lengths_word)
+                        else:
+                            sum_logL_notword += model.score(X_word, lengths_word)
+                    except:
+                        pass
+            scoreNew = logL_word - sum_logL_notword / (len(self.words)-1)
+            bestModel = model
+        return bestModel
 
 class SelectorCV(ModelSelector):
     ''' select best model based on average log Likelihood of cross-validation folds
